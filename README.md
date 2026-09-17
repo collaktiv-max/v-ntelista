@@ -20,18 +20,64 @@ npm run dev
 ## Hur svaren sparas
 
 Alla svar skickas till `POST /api/vantelista` (`src/app/api/vantelista/route.ts`),
-valideras på servern och sparas i `data/waitlist.json` via
-`src/lib/waitlist-db.ts` – en enkel fil-baserad "databas" så att alla
-anmälningar samlas på ett ställe (inte bara i besökarens egen webbläsare).
+valideras på servern och sparas via `src/lib/waitlist-db.ts`:
 
-Filen skapas automatiskt vid första anmälan och committas aldrig (se
-`.gitignore`), eftersom den innehåller riktiga svar från besökare.
+- **Lokalt** (`npm run dev`, ingen databas kopplad): sparas i filen
+  `data/waitlist.json`. Bra för att testa, men filen finns bara på din egen
+  dator/container och committas aldrig (se `.gitignore`).
+- **På Vercel** (när du kopplat en databas, se guiden nedan): sparas i en
+  riktig Postgres-databas via miljövariabeln `DATABASE_URL`. Det är detta
+  du ska använda på riktigt, så att alla anmälningar samlas på ett ställe
+  och inte försvinner.
 
-Obs: på en serverless-driftsättning (t.ex. Vercel) är filsystemet
-skrivskyddat/tillfälligt mellan anrop. Kör då `next start` på en vanlig
-server, eller byt ut `src/lib/waitlist-db.ts` mot en riktig databas
-(t.ex. Postgres/Supabase) – funktionssignaturerna (`addWaitlistEntry`) är
-skrivna så att det går att göra utan att ändra `route.ts`.
+## Driftsättning på Vercel – steg för steg
+
+### 1. Koppla GitHub-repot till Vercel
+
+1. Gå till [vercel.com](https://vercel.com) och logga in (kan göras med
+   ditt GitHub-konto).
+2. Klicka **Add New → Project**.
+3. Välj repot `collaktiv-max/v-ntelista` och klicka **Import**.
+4. Vercel känner igen att det är ett Next.js-projekt automatiskt – du
+   behöver inte ändra några inställningar. Klicka **Deploy**.
+5. Efter ett par minuter får du en länk som `v-ntelista.vercel.app` där
+   sidan är live. Just nu sparas anmälningar fortfarande i en fil som
+   nollställs ibland – gör steg 2 innan ni delar länken på riktigt.
+
+### 2. Koppla på en riktig databas
+
+1. Öppna projektet i Vercel och gå till fliken **Storage**.
+2. Klicka **Create Database** och välj **Postgres** (drivs av Neon,
+   ingår gratis i Vercels hobby-plan upp till en bra bit).
+3. Följ guiden och klicka **Connect** till ditt projekt (`v-ntelista`).
+   Vercel lägger då automatiskt in miljövariabeln `DATABASE_URL` åt dig –
+   du behöver inte skriva in något själv.
+4. Gå till **Deployments** och klicka **Redeploy** på den senaste
+   deployen (så att den nya miljövariabeln börjar användas).
+5. Klart! Nu skapas tabellen `waitlist_entries` automatiskt första gången
+   någon skickar in ett svar. Vill du se svaren: **Storage → din databas →
+   Query**, kör t.ex.:
+   ```sql
+   select * from waitlist_entries order by created_at desc;
+   ```
+
+### 3. Koppla er egen domän (t.ex. collaktiv.se)
+
+1. I Vercel-projektet: **Settings → Domains**.
+2. Skriv in domänen ni äger (eller köp en direkt i samma vy om ni inte har
+   någon än) och klicka **Add**.
+3. Vercel visar en eller två DNS-poster ni ska lägga till hos er
+   domänleverantör (t.ex. Loopia, One.com, GoDaddy):
+   - En **A-post** som pekar `@` mot en IP-adress Vercel ger er, **eller**
+   - En **CNAME-post** som pekar t.ex. `www` mot `cname.vercel-dns.com`.
+4. Logga in hos domänleverantören, hitta DNS-inställningarna för
+   domänen, och lägg till posterna exakt som Vercel visar.
+5. Det kan ta allt från några minuter till någon timme innan det slår
+   igenom. Vercel visar en grön bock i Domains-fliken när allt fungerar,
+   och fixar automatiskt HTTPS (hänglåset) åt er.
+
+Efter detta pushar ni bara ändringar till `main` som vanligt – Vercel
+bygger och publicerar automatiskt varje gång.
 
 ## Struktur
 
