@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowRight, ChevronDown, CheckCircle2, Loader2 } from "lucide-react";
+import { ArrowRight, CheckCircle2, Loader2 } from "lucide-react";
 import { Container } from "@/components/ui/Container";
 import { Logo } from "@/components/ui/Logo";
 import { Button } from "@/components/ui/Button";
@@ -10,7 +10,6 @@ import { Field, Input, Textarea } from "@/components/ui/Field";
 import { OptionPill } from "@/components/waitlist/OptionPill";
 import { QuestionCard } from "@/components/waitlist/QuestionCard";
 import { MissingAnswersModal } from "@/components/waitlist/MissingAnswersModal";
-import { ValueGrid } from "@/components/waitlist/ValueGrid";
 import { FollowSection } from "@/components/waitlist/FollowSection";
 import { Footer } from "@/components/waitlist/Footer";
 import { RABATT_OPTIONS, type RabattOption } from "@/lib/types";
@@ -238,20 +237,6 @@ export default function VantelistaPage() {
             )}
           </AnimatePresence>
         </Container>
-
-        <div className="flex flex-col items-center gap-2 pb-6 sm:pb-8">
-          <p className="text-xs font-extrabold uppercase tracking-widest text-[var(--color-brand-primary)]">
-            Skrolla ner för en överraskning
-          </p>
-          <motion.div
-            animate={{ y: [0, 8, 0] }}
-            transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
-          >
-            <ChevronDown className="h-6 w-6 text-[var(--color-brand-primary)]" />
-          </motion.div>
-        </div>
-
-        <ValueGrid />
       </main>
 
       <FollowSection />

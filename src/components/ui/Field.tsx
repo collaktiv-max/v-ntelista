@@ -30,8 +30,10 @@ export function Field({
   );
 }
 
+// text-[16px] (inte t.ex. 15px) är medvetet – iOS Safari zoomar automatiskt
+// in hela sidan när ett fokuserat formulärfält har mindre textstorlek än 16px.
 const inputBase =
-  "w-full rounded-xl border border-[var(--color-brand-border)] bg-white px-4 py-3 text-[15px] font-medium text-[var(--color-brand-ink)] placeholder:text-[var(--color-brand-muted)]/70 outline-none transition focus:border-[var(--color-brand-primary)] focus:ring-2 focus:ring-[var(--color-brand-primary)]/15";
+  "w-full rounded-xl border border-[var(--color-brand-border)] bg-white px-4 py-3 text-[16px] font-medium text-[var(--color-brand-ink)] placeholder:text-[var(--color-brand-muted)]/70 outline-none transition focus:border-[var(--color-brand-primary)] focus:ring-2 focus:ring-[var(--color-brand-primary)]/15";
 
 export function Input(props: React.InputHTMLAttributes<HTMLInputElement>) {
   const { className, ...rest } = props;
