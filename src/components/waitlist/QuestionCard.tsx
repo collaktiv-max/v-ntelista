@@ -1,4 +1,7 @@
+"use client";
+
 import { type ReactNode } from "react";
+import { motion } from "framer-motion";
 import { cn } from "@/lib/cn";
 
 export function QuestionCard({
@@ -17,9 +20,13 @@ export function QuestionCard({
   className?: string;
 }) {
   return (
-    <div
+    <motion.div
+      initial={{ opacity: 0, y: 16 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-60px" }}
+      transition={{ duration: 0.35, delay: (step - 1) * 0.08 }}
       className={cn(
-        "rounded-[1.75rem] border border-[var(--color-brand-border)] bg-white p-6 shadow-sm sm:p-8",
+        "rounded-[1.75rem] border border-[var(--color-brand-primary)] bg-[#F2FAF7] p-6 shadow-sm sm:p-8",
         className
       )}
     >
@@ -29,7 +36,7 @@ export function QuestionCard({
             "flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-extrabold transition-colors",
             done
               ? "bg-[var(--color-brand-primary)] text-white"
-              : "bg-[var(--color-brand-secondary)] text-[var(--color-brand-primary)]"
+              : "border border-[var(--color-brand-primary)] bg-white text-[var(--color-brand-primary)]"
           )}
         >
           {step}
@@ -46,6 +53,6 @@ export function QuestionCard({
         </div>
       </div>
       <div className="mt-5">{children}</div>
-    </div>
+    </motion.div>
   );
 }

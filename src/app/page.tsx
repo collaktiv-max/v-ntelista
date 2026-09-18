@@ -2,30 +2,25 @@
 
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowRight, CheckCircle2, Loader2 } from "lucide-react";
+import { ArrowRight, ChevronDown, CheckCircle2, Loader2 } from "lucide-react";
 import { Container } from "@/components/ui/Container";
 import { Logo } from "@/components/ui/Logo";
 import { Button } from "@/components/ui/Button";
-import { Field, Input } from "@/components/ui/Field";
+import { Field, Input, Textarea } from "@/components/ui/Field";
 import { OptionPill } from "@/components/waitlist/OptionPill";
 import { QuestionCard } from "@/components/waitlist/QuestionCard";
 import { MissingAnswersModal } from "@/components/waitlist/MissingAnswersModal";
 import { ValueGrid } from "@/components/waitlist/ValueGrid";
 import { FollowSection } from "@/components/waitlist/FollowSection";
 import { Footer } from "@/components/waitlist/Footer";
-import {
-  MER_BUSS_OPTIONS,
-  RABATT_OPTIONS,
-  type MerBussOption,
-  type RabattOption,
-} from "@/lib/types";
+import { RABATT_OPTIONS, type RabattOption } from "@/lib/types";
 
 const EMAIL_RE = /^\S+@\S+\.\S+$/;
 
 export default function VantelistaPage() {
   const [busGuess, setBusGuess] = useState("");
-  const [merBussAnswer, setMerBussAnswer] = useState<MerBussOption | null>(null);
   const [rabattAnswer, setRabattAnswer] = useState<RabattOption | null>(null);
+  const [localBusinessAnswer, setLocalBusinessAnswer] = useState("");
   const [email, setEmail] = useState("");
 
   const [submitting, setSubmitting] = useState(false);
@@ -39,8 +34,8 @@ export default function VantelistaPage() {
     if (!busGuess.trim() || !Number.isFinite(guess) || guess < 0) {
       list.push("Din gissning på antalet bussbiljetter");
     }
-    if (!merBussAnswer && !rabattAnswer) {
-      list.push("Ett svar på minst en av de två frågorna");
+    if (!rabattAnswer) {
+      list.push("Ett svar på frågan om vilka rabatter du vill ha");
     }
     if (!EMAIL_RE.test(email.trim())) {
       list.push("En giltig e-postadress");
@@ -64,8 +59,8 @@ export default function VantelistaPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           busGuess: Number(busGuess),
-          merBussAnswer,
           rabattAnswer,
+          localBusinessAnswer: localBusinessAnswer.trim() || null,
           email,
         }),
       });
@@ -85,22 +80,38 @@ export default function VantelistaPage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-white">
-      <header className="py-8 sm:py-10">
+    <div className="relative flex min-h-screen flex-col overflow-x-hidden bg-white">
+      <div className="pointer-events-none absolute -top-24 left-1/2 h-72 w-72 -translate-x-1/2 rounded-full bg-[var(--color-brand-accent)]/15 blur-3xl" />
+
+      <header className="relative py-10 sm:py-14">
         <Container className="flex justify-center">
-          <Logo textClassName="text-2xl sm:text-3xl" className="gap-3" />
+          <motion.div
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+          >
+            <Logo
+              showIcon={false}
+              textClassName="text-4xl sm:text-5xl md:text-6xl"
+            />
+          </motion.div>
         </Container>
       </header>
 
-      <main className="flex-1">
+      <main className="relative flex-1">
         <Container className="max-w-2xl pb-6 text-center sm:pb-10">
-          <p className="text-[16px] font-semibold leading-relaxed text-[var(--color-brand-muted)] sm:text-lg">
+          <motion.p
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.1 }}
+            className="text-[16px] font-semibold leading-relaxed text-[var(--color-brand-muted)] sm:text-lg"
+          >
             Res kollektivt, samla resepoäng och växla in dem mot rabatter hos
             lokala företag.
-          </p>
+          </motion.p>
         </Container>
 
-        <Container className="max-w-2xl pb-14 sm:pb-20">
+        <Container className="max-w-2xl pb-8 sm:pb-10">
           <AnimatePresence mode="wait">
             {submitted ? (
               <motion.div
@@ -124,7 +135,7 @@ export default function VantelistaPage() {
                   step={1}
                   done={busGuess.trim().length > 0}
                   title="Gissa antalet bussbiljetter"
-                  subtitle="Hur många bussbiljetter tror du säljs i Gävleborg under en dag? Den som gissar närmast rätt vinner ett pris."
+                  subtitle="Den som gissar närmast rätt vinner ett pris."
                 >
                   <Input
                     type="number"
@@ -138,47 +149,53 @@ export default function VantelistaPage() {
 
                 <QuestionCard
                   step={2}
-                  done={!!merBussAnswer || !!rabattAnswer}
+                  done={!!rabattAnswer}
                   title="Hjälp oss bli bättre"
-                  subtitle="Svara på minst en av frågorna nedan för att gå vidare."
+                  subtitle="Svara på frågan nedan för att gå vidare."
                 >
-                  <div className="flex flex-col gap-6">
-                    <div role="radiogroup" aria-label="Vad hade fått dig att åka mer buss?">
-                      <p className="mb-3 text-[14.5px] font-bold text-[var(--color-brand-ink)]">
-                        Vad hade fått dig att åka mer buss?
-                      </p>
-                      <div className="flex flex-col gap-2">
-                        {MER_BUSS_OPTIONS.map((option) => (
-                          <OptionPill
-                            key={option}
-                            label={option}
-                            selected={merBussAnswer === option}
-                            onSelect={() =>
-                              setMerBussAnswer(merBussAnswer === option ? null : option)
-                            }
-                          />
-                        ))}
-                      </div>
-                    </div>
-
-                    <div role="radiogroup" aria-label="Vad för rabatter skulle du vilja att Collaktiv erbjuder?">
-                      <p className="mb-3 text-[14.5px] font-bold text-[var(--color-brand-ink)]">
-                        Vad för rabatter skulle du vilja att Collaktiv erbjuder?
-                      </p>
-                      <div className="flex flex-col gap-2">
-                        {RABATT_OPTIONS.map((option) => (
-                          <OptionPill
-                            key={option}
-                            label={option}
-                            selected={rabattAnswer === option}
-                            onSelect={() =>
-                              setRabattAnswer(rabattAnswer === option ? null : option)
-                            }
-                          />
-                        ))}
-                      </div>
+                  <div role="radiogroup" aria-label="Vad för typ av rabatter skulle du vilja ha?">
+                    <p className="mb-3 text-[14.5px] font-bold text-[var(--color-brand-ink)]">
+                      Vad för typ av rabatter skulle du vilja ha?
+                    </p>
+                    <div className="flex flex-col gap-2">
+                      {RABATT_OPTIONS.map((option, index) => (
+                        <OptionPill
+                          key={option}
+                          index={index}
+                          label={option}
+                          selected={rabattAnswer === option}
+                          onSelect={() =>
+                            setRabattAnswer(rabattAnswer === option ? null : option)
+                          }
+                        />
+                      ))}
                     </div>
                   </div>
+
+                  <AnimatePresence>
+                    {rabattAnswer && (
+                      <motion.div
+                        key="local-business"
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.3, ease: "easeInOut" }}
+                        className="overflow-hidden"
+                      >
+                        <Field
+                          label="Vilken lokal butik, restaurang eller företag i din stad skulle du allra helst vilja ha erbjudanden hos i Collaktiv?"
+                          hint="Frivilligt"
+                          className="mt-4"
+                        >
+                          <Textarea
+                            placeholder="T.ex. namnet på ett lokalt café eller en butik"
+                            value={localBusinessAnswer}
+                            onChange={(e) => setLocalBusinessAnswer(e.target.value)}
+                          />
+                        </Field>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </QuestionCard>
 
                 <QuestionCard
@@ -222,6 +239,18 @@ export default function VantelistaPage() {
           </AnimatePresence>
         </Container>
 
+        <div className="flex flex-col items-center gap-2 pb-6 sm:pb-8">
+          <p className="text-xs font-extrabold uppercase tracking-widest text-[var(--color-brand-primary)]">
+            Skrolla ner för en överraskning
+          </p>
+          <motion.div
+            animate={{ y: [0, 8, 0] }}
+            transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
+          >
+            <ChevronDown className="h-6 w-6 text-[var(--color-brand-primary)]" />
+          </motion.div>
+        </div>
+
         <ValueGrid />
       </main>
 
@@ -237,8 +266,8 @@ export default function VantelistaPage() {
 
 function SuccessCard({ email }: { email: string }) {
   return (
-    <div className="rounded-[1.75rem] border border-[var(--color-brand-border)] bg-white p-8 text-center shadow-sm sm:p-10">
-      <span className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[var(--color-brand-primary)]/10 text-[var(--color-brand-primary)]">
+    <div className="rounded-[1.75rem] border border-[var(--color-brand-primary)] bg-[#F2FAF7] p-8 text-center shadow-sm sm:p-10">
+      <span className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-white text-[var(--color-brand-primary)]">
         <CheckCircle2 className="h-9 w-9" />
       </span>
       <h2 className="mt-5 text-2xl font-extrabold text-[var(--color-brand-ink)]">

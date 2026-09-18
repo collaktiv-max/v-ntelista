@@ -1,3 +1,6 @@
+"use client";
+
+import { motion } from "framer-motion";
 import { Bus, Gift } from "lucide-react";
 import { Container } from "@/components/ui/Container";
 
@@ -18,10 +21,14 @@ export function ValueGrid() {
   return (
     <Container className="py-10 sm:py-14">
       <div className="grid gap-5 sm:grid-cols-2">
-        {items.map(({ icon: Icon, title, text }) => (
-          <div
+        {items.map(({ icon: Icon, title, text }, index) => (
+          <motion.div
             key={title}
-            className="rounded-2xl border border-[var(--color-brand-border)] bg-[var(--color-brand-secondary)] p-6"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-40px" }}
+            transition={{ duration: 0.4, delay: index * 0.1 }}
+            className="rounded-2xl border border-[var(--color-brand-primary)] bg-[#F2FAF7] p-6"
           >
             <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-white text-[var(--color-brand-primary)]">
               <Icon className="h-5 w-5" />
@@ -32,7 +39,7 @@ export function ValueGrid() {
             <p className="mt-2 text-[13.5px] font-medium leading-relaxed text-[var(--color-brand-muted)]">
               {text}
             </p>
-          </div>
+          </motion.div>
         ))}
       </div>
     </Container>

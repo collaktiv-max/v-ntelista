@@ -37,3 +37,8 @@ export function Input(props: React.InputHTMLAttributes<HTMLInputElement>) {
   const { className, ...rest } = props;
   return <input className={cn(inputBase, className)} {...rest} />;
 }
+
+export function Textarea(props: React.TextareaHTMLAttributes<HTMLTextAreaElement>) {
+  const { className, ...rest } = props;
+  return <textarea className={cn(inputBase, "min-h-24 resize-y", className)} {...rest} />;
+}

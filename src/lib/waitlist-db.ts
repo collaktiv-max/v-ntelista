@@ -21,16 +21,24 @@ function sql() {
 
 async function ensureTable() {
   if (!tableReady) {
-    tableReady = sql()`
-      CREATE TABLE IF NOT EXISTS waitlist_entries (
-        id TEXT PRIMARY KEY,
-        bus_guess INTEGER NOT NULL,
-        mer_buss_answer TEXT,
-        rabatt_answer TEXT,
-        email TEXT NOT NULL,
-        created_at TIMESTAMPTZ NOT NULL
-      )
-    `.then(() => undefined);
+    tableReady = (async () => {
+      await sql()`
+        CREATE TABLE IF NOT EXISTS waitlist_entries (
+          id TEXT PRIMARY KEY,
+          bus_guess INTEGER NOT NULL,
+          rabatt_answer TEXT NOT NULL,
+          local_business_answer TEXT,
+          email TEXT NOT NULL,
+          created_at TIMESTAMPTZ NOT NULL
+        )
+      `;
+      // Säkerställer att kolumnen finns även på en databas som skapades
+      // innan den här frågan lades till.
+      await sql()`
+        ALTER TABLE waitlist_entries
+        ADD COLUMN IF NOT EXISTS local_business_answer TEXT
+      `;
+    })();
   }
   await tableReady;
 }
@@ -45,8 +53,8 @@ async function addEntryPostgres(
     createdAt: new Date().toISOString(),
   };
   await sql()`
-    INSERT INTO waitlist_entries (id, bus_guess, mer_buss_answer, rabatt_answer, email, created_at)
-    VALUES (${entry.id}, ${entry.busGuess}, ${entry.merBussAnswer}, ${entry.rabattAnswer}, ${entry.email}, ${entry.createdAt})
+    INSERT INTO waitlist_entries (id, bus_guess, rabatt_answer, local_business_answer, email, created_at)
+    VALUES (${entry.id}, ${entry.busGuess}, ${entry.rabattAnswer}, ${entry.localBusinessAnswer}, ${entry.email}, ${entry.createdAt})
   `;
   return entry;
 }

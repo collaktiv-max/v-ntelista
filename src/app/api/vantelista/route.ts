@@ -1,13 +1,9 @@
 import { NextResponse } from "next/server";
 import { addWaitlistEntry } from "@/lib/waitlist-db";
-import {
-  MER_BUSS_OPTIONS,
-  RABATT_OPTIONS,
-  type MerBussOption,
-  type RabattOption,
-} from "@/lib/types";
+import { RABATT_OPTIONS, type RabattOption } from "@/lib/types";
 
 const EMAIL_RE = /^\S+@\S+\.\S+$/;
+const MAX_LOCAL_BUSINESS_LENGTH = 500;
 
 export async function POST(request: Request) {
   let body: unknown;
@@ -17,7 +13,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Ogiltig förfrågan." }, { status: 400 });
   }
 
-  const { busGuess, merBussAnswer, rabattAnswer, email } = (body ?? {}) as Record<
+  const { busGuess, rabattAnswer, localBusinessAnswer, email } = (body ?? {}) as Record<
     string,
     unknown
   >;
@@ -30,23 +26,23 @@ export async function POST(request: Request) {
     );
   }
 
-  const merBuss =
-    typeof merBussAnswer === "string" &&
-    (MER_BUSS_OPTIONS as readonly string[]).includes(merBussAnswer)
-      ? (merBussAnswer as MerBussOption)
-      : null;
   const rabatt =
     typeof rabattAnswer === "string" &&
     (RABATT_OPTIONS as readonly string[]).includes(rabattAnswer)
       ? (rabattAnswer as RabattOption)
       : null;
 
-  if (!merBuss && !rabatt) {
+  if (!rabatt) {
     return NextResponse.json(
-      { error: "Svara på minst en av de två frågorna." },
+      { error: "Svara på frågan om vilka rabatter du vill ha." },
       { status: 400 }
     );
   }
+
+  const localBusiness =
+    typeof localBusinessAnswer === "string"
+      ? localBusinessAnswer.trim().slice(0, MAX_LOCAL_BUSINESS_LENGTH)
+      : "";
 
   if (typeof email !== "string" || !EMAIL_RE.test(email.trim())) {
     return NextResponse.json(
@@ -57,8 +53,8 @@ export async function POST(request: Request) {
 
   const entry = await addWaitlistEntry({
     busGuess: guess,
-    merBussAnswer: merBuss,
     rabattAnswer: rabatt,
+    localBusinessAnswer: localBusiness || null,
     email: email.trim().toLowerCase(),
   });
 
