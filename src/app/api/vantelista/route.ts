@@ -1,11 +1,17 @@
 import { NextResponse } from "next/server";
 import { addWaitlistEntry } from "@/lib/waitlist-db";
 import { RABATT_OPTIONS, type RabattOption } from "@/lib/types";
+import { getStorageProblem } from "@/lib/db-env";
 
 const EMAIL_RE = /^\S+@\S+\.\S+$/;
 const MAX_LOCAL_BUSINESS_LENGTH = 500;
 
 export async function POST(request: Request) {
+  const storageProblem = getStorageProblem();
+  if (storageProblem) {
+    return NextResponse.json({ error: storageProblem }, { status: 503 });
+  }
+
   let body: unknown;
   try {
     body = await request.json();
@@ -51,12 +57,18 @@ export async function POST(request: Request) {
     );
   }
 
-  const entry = await addWaitlistEntry({
-    busGuess: guess,
-    rabattAnswer: rabatt,
-    localBusinessAnswer: localBusiness || null,
-    email: email.trim().toLowerCase(),
-  });
-
-  return NextResponse.json({ ok: true, id: entry.id }, { status: 201 });
+  try {
+    const entry = await addWaitlistEntry({
+      busGuess: guess,
+      rabattAnswer: rabatt,
+      localBusinessAnswer: localBusiness || null,
+      email: email.trim().toLowerCase(),
+    });
+    return NextResponse.json({ ok: true, id: entry.id }, { status: 201 });
+  } catch (err) {
+    return NextResponse.json(
+      { error: `Databasfel: ${err instanceof Error ? err.message : "okänt fel"}` },
+      { status: 500 }
+    );
+  }
 }

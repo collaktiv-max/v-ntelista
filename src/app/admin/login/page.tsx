@@ -10,6 +10,7 @@ export default function AdminLoginPage() {
   const router = useRouter();
   const [checkingStatus, setCheckingStatus] = useState(true);
   const [configured, setConfigured] = useState(false);
+  const [statusError, setStatusError] = useState<string | null>(null);
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -19,9 +20,15 @@ export default function AdminLoginPage() {
 
   useEffect(() => {
     fetch("/api/admin/status")
-      .then((res) => res.json())
-      .then((data) => setConfigured(Boolean(data.configured)))
-      .catch(() => setConfigured(true)) // anta inloggning vid osäkerhet
+      .then(async (res) => {
+        const data = await res.json().catch(() => null);
+        if (!res.ok) {
+          setStatusError(data?.error ?? "Kunde inte kontrollera inloggningsstatus.");
+          return;
+        }
+        setConfigured(Boolean(data?.configured));
+      })
+      .catch(() => setStatusError("Kunde inte nå servern. Ladda om sidan och försök igen."))
       .finally(() => setCheckingStatus(false));
   }, []);
 
@@ -83,6 +90,21 @@ export default function AdminLoginPage() {
 
   if (checkingStatus) {
     return <div className="flex min-h-screen items-center justify-center bg-white" />;
+  }
+
+  if (statusError) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-white px-5">
+        <div className="w-full max-w-sm">
+          <div className="mb-8 flex justify-center">
+            <Logo showIcon={false} textClassName="text-3xl" />
+          </div>
+          <div className="rounded-[1.75rem] border border-red-200 bg-red-50 p-7 text-center sm:p-8">
+            <p className="text-sm font-bold text-red-700">{statusError}</p>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (

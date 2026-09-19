@@ -1,6 +1,7 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { neon } from "@neondatabase/serverless";
+import { resolveDatabaseUrl } from "./db-env";
 
 // Adminkontot (e-post, lösenordshash och en slumpad signeringsnyckel för
 // inloggningssessionen) sparas i samma databas som väntelistans svar –
@@ -14,7 +15,7 @@ export interface AdminConfig {
   sessionSecret: string;
 }
 
-const databaseUrl = process.env.DATABASE_URL;
+const databaseUrl = resolveDatabaseUrl();
 
 function sql() {
   return neon(databaseUrl!);

@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { neon } from "@neondatabase/serverless";
+import { resolveDatabaseUrl } from "./db-env";
 import type { WaitlistEntry, WaitlistSubmission } from "./types";
 
 // Anmälningar sparas i en riktig Postgres-databas (Neon) när projektet är
@@ -11,7 +12,7 @@ import type { WaitlistEntry, WaitlistSubmission } from "./types";
 // Saknas DATABASE_URL (t.ex. när du kör `npm run dev` lokalt utan att ha
 // kopplat en databas) sparas anmälningarna istället i data/waitlist.json,
 // så sidan går att testa direkt utan extra uppsättning.
-const databaseUrl = process.env.DATABASE_URL;
+const databaseUrl = resolveDatabaseUrl();
 
 let tableReady: Promise<void> | null = null;
 

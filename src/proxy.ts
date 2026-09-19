@@ -8,8 +8,13 @@ export async function proxy(request: NextRequest) {
   }
 
   const token = request.cookies.get(ADMIN_SESSION_COOKIE)?.value;
-  const config = await getAdminConfig();
-  const valid = config ? await verifyAdminSessionToken(token, config.sessionSecret) : false;
+  let valid = false;
+  try {
+    const config = await getAdminConfig();
+    valid = config ? await verifyAdminSessionToken(token, config.sessionSecret) : false;
+  } catch {
+    valid = false;
+  }
 
   if (!valid) {
     return NextResponse.redirect(new URL("/admin/login", request.url));
