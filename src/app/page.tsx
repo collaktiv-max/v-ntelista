@@ -134,7 +134,7 @@ export default function VantelistaPage() {
                   step={1}
                   done={busGuess.trim().length > 0}
                   title="Gissa antalet bussbiljetter"
-                  subtitle="Den som gissar närmast rätt vinner ett pris."
+                  subtitle="De två som gissar närmast får ett varsitt pris!"
                 >
                   <Input
                     type="number"
@@ -152,9 +152,9 @@ export default function VantelistaPage() {
                   title="Hjälp oss bli bättre"
                   subtitle="Svara på frågan nedan för att gå vidare."
                 >
-                  <div role="radiogroup" aria-label="Vad för typ av rabatter skulle du vilja ha?">
+                  <div role="radiogroup" aria-label="Vad för rabatter skulle du vilja ha för att åka mer buss?">
                     <p className="mb-3 text-[14.5px] font-bold text-[var(--color-brand-ink)]">
-                      Vad för typ av rabatter skulle du vilja ha?
+                      Vad för rabatter skulle du vilja ha för att åka mer buss?
                     </p>
                     <div className="flex flex-col gap-2">
                       {RABATT_OPTIONS.map((option, index) => (
