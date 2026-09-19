@@ -91,31 +91,28 @@ rabattsvar och det frivilliga fritextsvaret.
 - **Sök**: filtrera på e-postadress.
 - **Exportera CSV**: laddar ner alla anmälningar som en Excel-vänlig fil.
 
-**Inloggningsuppgifter är inte hårdkodade** – utan att sätta miljövariabler
-går det inte att logga in alls (medvetet, så inget lösenord ligger i
-klartext i koden eller i git-historiken). Så här sätter du dem:
+**Inget att ställa in i Vercel för inloggningen.** Första gången någon
+öppnar `/admin` finns inget konto än, så sidan visar "Skapa admin-konto"
+istället för en inloggningsruta – fyll i den e-post och det lösenord ni
+vill logga in med direkt där, så är ni inloggade på en gång. Kontot
+sparas i samma databas som väntelistans svar (se avsnittet ovan om att
+koppla på en databas – utan den fungerar inloggningen bara tillfälligt,
+av samma anledning som anmälningarna annars försvinner).
 
-1. Vercel-projektet → **Settings → Environment Variables**.
-2. Lägg till:
-   - `ADMIN_EMAIL` – e-postadressen ni vill logga in med
-   - `ADMIN_PASSWORD` – lösenordet ni vill logga in med
-   - `ADMIN_SESSION_SECRET` – en lång, slumpad text (t.ex. generera en på
-     [random.org](https://www.random.org/strings/) eller kör
-     `openssl rand -hex 32` i terminalen)
-3. **Deployments → Redeploy** på senaste deployen.
-
-Vill du testa lokalt: skapa en fil `.env.local` (den är redan
-gitignorad, hamnar aldrig i repot) och lägg samma tre rader där.
+Vill ni byta e-post eller lösenord senare: **Kontoinställningar**-knappen
+uppe i adminsidan, ingen Vercel-inblandning där heller.
 
 ## Struktur
 
 - `src/app/page.tsx` – väntelistan/tävlingen (en sida)
 - `src/app/admin` – skyddad sida för att se alla anmälningar
 - `src/app/api/vantelista/route.ts` – tar emot och validerar anmälningar
-- `src/app/api/admin` – inloggning, utloggning och att hämta anmälningar
+- `src/app/api/admin` – konto (skapa/logga in/logga ut/byt uppgifter) och
+  att hämta anmälningar
 - `src/lib/waitlist-db.ts` – lagring av anmälningar
-- `src/lib/admin-auth.ts` – inloggningskontroll och sessionscookie för `/admin`
-- `src/middleware.ts` – skyddar `/admin`-sidorna mot obehörig åtkomst
+- `src/lib/admin-db.ts` – lagring av adminkontot
+- `src/lib/admin-auth.ts` – lösenordshashning, sessionscookie för `/admin`
+- `src/proxy.ts` – skyddar `/admin`-sidorna mot obehörig åtkomst
 - `src/lib/types.ts` – datamodell och svarsalternativ
 - `src/components/waitlist` – sidans sektioner (frågekort, val, följ-oss m.m.)
 - `src/components/ui` – delade UI-komponenter i Collaktivs grafiska profil

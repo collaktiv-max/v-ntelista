@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { Download, LogOut, Search } from "lucide-react";
+import { Download, LogOut, Search, Settings } from "lucide-react";
 import { Container } from "@/components/ui/Container";
 import { Logo } from "@/components/ui/Logo";
 import { Button } from "@/components/ui/Button";
@@ -16,6 +16,14 @@ export default function AdminPage() {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [facit, setFacit] = useState("");
   const [search, setSearch] = useState("");
+
+  const [showSettings, setShowSettings] = useState(false);
+  const [settingsEmail, setSettingsEmail] = useState("");
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [settingsError, setSettingsError] = useState<string | null>(null);
+  const [settingsSuccess, setSettingsSuccess] = useState(false);
+  const [settingsSubmitting, setSettingsSubmitting] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -37,6 +45,15 @@ export default function AdminPage() {
     };
   }, [router]);
 
+  useEffect(() => {
+    fetch("/api/admin/me")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data?.email) setSettingsEmail(data.email);
+      })
+      .catch(() => {});
+  }, []);
+
   const facitNumber = facit.trim() === "" ? null : Number(facit);
   const hasFacit = facitNumber !== null && Number.isFinite(facitNumber);
 
@@ -54,6 +71,36 @@ export default function AdminPage() {
   async function handleLogout() {
     await fetch("/api/admin/logout", { method: "POST" });
     router.replace("/admin/login");
+  }
+
+  async function handleUpdateAccount(e: React.FormEvent) {
+    e.preventDefault();
+    setSettingsError(null);
+    setSettingsSuccess(false);
+    if (newPassword.length < 8) {
+      setSettingsError("Det nya lösenordet måste vara minst 8 tecken.");
+      return;
+    }
+    setSettingsSubmitting(true);
+    try {
+      const res = await fetch("/api/admin/account", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ currentPassword, newEmail: settingsEmail, newPassword }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        setSettingsError(data?.error ?? "Kunde inte spara.");
+        return;
+      }
+      setSettingsSuccess(true);
+      setCurrentPassword("");
+      setNewPassword("");
+    } catch {
+      setSettingsError("Kunde inte spara just nu. Försök igen.");
+    } finally {
+      setSettingsSubmitting(false);
+    }
   }
 
   function exportCsv() {
@@ -83,17 +130,78 @@ export default function AdminPage() {
       <header className="border-b border-[var(--color-brand-border)] py-5">
         <Container className="flex items-center justify-between gap-3">
           <Logo showIcon={false} textClassName="text-xl sm:text-2xl" />
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleLogout}
-            icon={<LogOut className="h-4 w-4" />}
-            iconPosition="left"
-          >
-            Logga ut
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setShowSettings((v) => !v);
+                setSettingsError(null);
+                setSettingsSuccess(false);
+              }}
+              icon={<Settings className="h-4 w-4" />}
+              iconPosition="left"
+            >
+              Kontoinställningar
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleLogout}
+              icon={<LogOut className="h-4 w-4" />}
+              iconPosition="left"
+            >
+              Logga ut
+            </Button>
+          </div>
         </Container>
       </header>
+
+      {showSettings && (
+        <div className="border-b border-[var(--color-brand-border)] bg-[#F2FAF7] py-6">
+          <Container className="max-w-4xl">
+            <form onSubmit={handleUpdateAccount} className="flex flex-col gap-4 sm:max-w-md">
+              <h2 className="text-sm font-extrabold text-[var(--color-brand-ink)]">
+                Byt e-post och/eller lösenord
+              </h2>
+              <Field label="E-post">
+                <Input
+                  type="email"
+                  value={settingsEmail}
+                  onChange={(e) => setSettingsEmail(e.target.value)}
+                />
+              </Field>
+              <Field label="Nuvarande lösenord">
+                <Input
+                  type="password"
+                  autoComplete="current-password"
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                />
+              </Field>
+              <Field label="Nytt lösenord" hint="Minst 8 tecken">
+                <Input
+                  type="password"
+                  autoComplete="new-password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                />
+              </Field>
+              {settingsError && (
+                <p className="text-sm font-bold text-red-600">{settingsError}</p>
+              )}
+              {settingsSuccess && (
+                <p className="text-sm font-bold text-[var(--color-brand-primary)]">
+                  Sparat! Använd de nya uppgifterna nästa gång ni loggar in.
+                </p>
+              )}
+              <Button type="submit" disabled={settingsSubmitting} className="sm:w-auto">
+                {settingsSubmitting ? "Sparar..." : "Spara"}
+              </Button>
+            </form>
+          </Container>
+        </div>
+      )}
 
       <Container className="max-w-4xl py-8 sm:py-10">
         <h1 className="text-xl font-extrabold text-[var(--color-brand-ink)] sm:text-2xl">

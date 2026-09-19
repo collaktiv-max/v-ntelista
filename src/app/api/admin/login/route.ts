@@ -5,15 +5,13 @@ import {
   createAdminSessionToken,
   isAdminConfigured,
 } from "@/lib/admin-auth";
+import { getAdminConfig } from "@/lib/admin-db";
 
 export async function POST(request: Request) {
-  if (!isAdminConfigured()) {
+  if (!(await isAdminConfigured())) {
     return NextResponse.json(
-      {
-        error:
-          "Adminkontot är inte konfigurerat än. Sätt ADMIN_EMAIL och ADMIN_PASSWORD i Vercel (Settings → Environment Variables) och driftsätt om.",
-      },
-      { status: 503 }
+      { error: "Inget adminkonto är skapat än. Skapa ett nedan." },
+      { status: 409 }
     );
   }
 
@@ -29,12 +27,13 @@ export async function POST(request: Request) {
   if (
     typeof email !== "string" ||
     typeof password !== "string" ||
-    !checkAdminCredentials(email, password)
+    !(await checkAdminCredentials(email, password))
   ) {
     return NextResponse.json({ error: "Fel e-post eller lösenord." }, { status: 401 });
   }
 
-  const token = await createAdminSessionToken(email.trim().toLowerCase());
+  const config = await getAdminConfig();
+  const token = await createAdminSessionToken(email.trim().toLowerCase(), config!.sessionSecret);
   const res = NextResponse.json({ ok: true });
   res.cookies.set(ADMIN_SESSION_COOKIE, token, {
     httpOnly: true,
