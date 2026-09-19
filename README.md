@@ -79,11 +79,43 @@ valideras på servern och sparas via `src/lib/waitlist-db.ts`:
 Efter detta pushar ni bara ändringar till `main` som vanligt – Vercel
 bygger och publicerar automatiskt varje gång.
 
+## Adminsida – se alla svar
+
+Gå till `/admin` på sidan (t.ex. `https://v-ntelista.vercel.app/admin`) för
+att logga in och se alla anmälningar i en lista, med e-post, gissning,
+rabattsvar och det frivilliga fritextsvaret.
+
+- **Facit**: fyll i det rätta antalet bussbiljetter i fältet högst upp när
+  ni vet svaret, så sorteras listan automatiskt efter vem som gissat
+  närmast (🥇/🥈 för de två som vinner pris).
+- **Sök**: filtrera på e-postadress.
+- **Exportera CSV**: laddar ner alla anmälningar som en Excel-vänlig fil.
+
+**Inloggningsuppgifter är inte hårdkodade** – utan att sätta miljövariabler
+går det inte att logga in alls (medvetet, så inget lösenord ligger i
+klartext i koden eller i git-historiken). Så här sätter du dem:
+
+1. Vercel-projektet → **Settings → Environment Variables**.
+2. Lägg till:
+   - `ADMIN_EMAIL` – e-postadressen ni vill logga in med
+   - `ADMIN_PASSWORD` – lösenordet ni vill logga in med
+   - `ADMIN_SESSION_SECRET` – en lång, slumpad text (t.ex. generera en på
+     [random.org](https://www.random.org/strings/) eller kör
+     `openssl rand -hex 32` i terminalen)
+3. **Deployments → Redeploy** på senaste deployen.
+
+Vill du testa lokalt: skapa en fil `.env.local` (den är redan
+gitignorad, hamnar aldrig i repot) och lägg samma tre rader där.
+
 ## Struktur
 
 - `src/app/page.tsx` – väntelistan/tävlingen (en sida)
+- `src/app/admin` – skyddad sida för att se alla anmälningar
 - `src/app/api/vantelista/route.ts` – tar emot och validerar anmälningar
+- `src/app/api/admin` – inloggning, utloggning och att hämta anmälningar
 - `src/lib/waitlist-db.ts` – lagring av anmälningar
+- `src/lib/admin-auth.ts` – inloggningskontroll och sessionscookie för `/admin`
+- `src/middleware.ts` – skyddar `/admin`-sidorna mot obehörig åtkomst
 - `src/lib/types.ts` – datamodell och svarsalternativ
 - `src/components/waitlist` – sidans sektioner (frågekort, val, följ-oss m.m.)
 - `src/components/ui` – delade UI-komponenter i Collaktivs grafiska profil

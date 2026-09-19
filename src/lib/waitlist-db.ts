@@ -59,6 +59,30 @@ async function addEntryPostgres(
   return entry;
 }
 
+async function getAllEntriesPostgres(): Promise<WaitlistEntry[]> {
+  await ensureTable();
+  const rows = (await sql()`
+    SELECT id, bus_guess, rabatt_answer, local_business_answer, email, created_at
+    FROM waitlist_entries
+    ORDER BY created_at DESC
+  `) as Array<{
+    id: string;
+    bus_guess: number;
+    rabatt_answer: string;
+    local_business_answer: string | null;
+    email: string;
+    created_at: string;
+  }>;
+  return rows.map((row) => ({
+    id: row.id,
+    busGuess: row.bus_guess,
+    rabattAnswer: row.rabatt_answer as WaitlistEntry["rabattAnswer"],
+    localBusinessAnswer: row.local_business_answer,
+    email: row.email,
+    createdAt: new Date(row.created_at).toISOString(),
+  }));
+}
+
 // --- Fallback för lokal utveckling utan databas ---
 
 const DATA_DIR = path.join(process.cwd(), "data");
@@ -93,4 +117,10 @@ export async function addWaitlistEntry(
   submission: WaitlistSubmission
 ): Promise<WaitlistEntry> {
   return databaseUrl ? addEntryPostgres(submission) : addEntryFile(submission);
+}
+
+export async function getAllWaitlistEntries(): Promise<WaitlistEntry[]> {
+  if (databaseUrl) return getAllEntriesPostgres();
+  const entries = await readAllFromFile();
+  return [...entries].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
