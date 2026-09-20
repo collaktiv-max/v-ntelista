@@ -1,7 +1,59 @@
-// Vercels Postgres-integration (Neon) brukar sätta DATABASE_URL, men vissa
-// varianter/äldre kopplingar sätter POSTGRES_URL istället – kolla båda.
+// Vercels Postgres-integration (Neon) sätter oftast DATABASE_URL, men
+// beroende på hur databasen kopplades in kan namnet skilja sig
+// (POSTGRES_URL, DATABASE_URL_UNPOOLED, eller ett eget prefix som
+// STORAGE_DATABASE_URL om ni valde ett anpassat prefix vid kopplingen).
+// Kolla de vanligaste namnen först, och om inget av dem finns – leta
+// efter VILKEN miljövariabel som helst vars namn slutar på
+// "DATABASE_URL"/"POSTGRES_URL" och vars värde faktiskt ser ut som en
+// Postgres-anslutningssträng.
+const PREFERRED_NAMES = [
+  "DATABASE_URL",
+  "POSTGRES_URL",
+  "DATABASE_URL_UNPOOLED",
+  "POSTGRES_URL_NON_POOLING",
+  "POSTGRES_PRISMA_URL",
+];
+
+function looksLikePostgresUrl(value: string | undefined): value is string {
+  return !!value && /^postgres(ql)?:\/\//i.test(value);
+}
+
+let cachedUrl: string | undefined | null = null;
+
 export function resolveDatabaseUrl(): string | undefined {
-  return process.env.DATABASE_URL || process.env.POSTGRES_URL;
+  if (cachedUrl !== null) return cachedUrl ?? undefined;
+
+  for (const name of PREFERRED_NAMES) {
+    const value = process.env[name];
+    if (looksLikePostgresUrl(value)) {
+      cachedUrl = value;
+      return value;
+    }
+  }
+
+  for (const [key, value] of Object.entries(process.env)) {
+    if (/(DATABASE_URL|POSTGRES_URL)$/i.test(key) && looksLikePostgresUrl(value)) {
+      cachedUrl = value;
+      return value;
+    }
+  }
+
+  cachedUrl = undefined;
+  return undefined;
+}
+
+// En säker, redigerad version (lösenordet dolt) av den hittade
+// anslutningssträngen – bra för att felsöka utan att läcka hemligheter.
+export function describeDatabaseUrl(): string | null {
+  const url = resolveDatabaseUrl();
+  if (!url) return null;
+  try {
+    const parsed = new URL(url);
+    if (parsed.password) parsed.password = "****";
+    return parsed.toString();
+  } catch {
+    return "(kunde inte tolkas som en giltig URL)";
+  }
 }
 
 // Körs vi på Vercel (VERCEL sätts alltid där) utan att databasen hittades?

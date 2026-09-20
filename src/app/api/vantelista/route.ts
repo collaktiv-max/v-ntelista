@@ -6,10 +6,17 @@ import { getStorageProblem } from "@/lib/db-env";
 const EMAIL_RE = /^\S+@\S+\.\S+$/;
 const MAX_LOCAL_BUSINESS_LENGTH = 500;
 
+// Besökare ska aldrig se interna drifttermer (Vercel, Redeploy, etc.) –
+// den detaljerade förklaringen loggas åt oss (och syns i /api/admin/debug)
+// istället.
+const GENERIC_STORAGE_ERROR =
+  "Kunde inte spara ditt svar just nu. Försök igen om en liten stund.";
+
 export async function POST(request: Request) {
   const storageProblem = getStorageProblem();
   if (storageProblem) {
-    return NextResponse.json({ error: storageProblem }, { status: 503 });
+    console.error("[vantelista] lagringsproblem:", storageProblem);
+    return NextResponse.json({ error: GENERIC_STORAGE_ERROR }, { status: 503 });
   }
 
   let body: unknown;
@@ -66,9 +73,7 @@ export async function POST(request: Request) {
     });
     return NextResponse.json({ ok: true, id: entry.id }, { status: 201 });
   } catch (err) {
-    return NextResponse.json(
-      { error: `Databasfel: ${err instanceof Error ? err.message : "okänt fel"}` },
-      { status: 500 }
-    );
+    console.error("[vantelista] kunde inte spara anmälan:", err);
+    return NextResponse.json({ error: GENERIC_STORAGE_ERROR }, { status: 500 });
   }
 }
