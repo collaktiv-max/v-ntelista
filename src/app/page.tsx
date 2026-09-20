@@ -260,8 +260,7 @@ function SuccessCard({ email }: { email: string }) {
       </h2>
       <p className="mt-3 text-[15px] font-medium leading-relaxed text-[var(--color-brand-muted)]">
         Vi har sparat dina svar. Du får ett mejl till {email || "din adress"}{" "}
-        om du vinner, och håller du utkik i inkorgen så hör vi av oss så fort
-        Collaktiv lanseras.
+        om du blir den lyckliga vinnaren!
       </p>
     </div>
   );
