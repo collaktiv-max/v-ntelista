@@ -134,7 +134,7 @@ export default function VantelistaPage() {
                   step={1}
                   done={busGuess.trim().length > 0}
                   title="Gissa antalet bussbiljetter"
-                  subtitle="De två som gissar närmast får ett varsitt pris!"
+                  subtitle="De tre som gissar närmast får ett varsitt pris!"
                 >
                   <Input
                     type="number"

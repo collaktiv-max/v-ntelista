@@ -276,6 +276,7 @@ export default function AdminPage() {
                 <div className="flex items-center gap-2">
                   {hasFacit && index === 0 && <span title="Närmast gissning">🥇</span>}
                   {hasFacit && index === 1 && <span title="Näst närmast gissning">🥈</span>}
+                  {hasFacit && index === 2 && <span title="Tredje närmast gissning">🥉</span>}
                   <span className="font-extrabold text-[var(--color-brand-ink)]">
                     {entry.email}
                   </span>
